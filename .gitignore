@@ -1,0 +1,13 @@
+.gradle/
+.kotlin/
+build/
+out/
+
+.idea/
+*.iml
+.vscode/
+
+# ONNX model and tokenizer
+models/
+
+docs/
