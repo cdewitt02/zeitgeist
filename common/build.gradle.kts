@@ -5,4 +5,5 @@ plugins {
 
 dependencies {
     implementation(libs.kafka.clients)
+    implementation(libs.jackson.databind)
 }
