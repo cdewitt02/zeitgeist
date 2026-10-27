@@ -11,6 +11,8 @@ final class Stats {
 
     final LongAdder posts = new LongAdder();
     final LongAdder english = new LongAdder();
+    final LongAdder matched = new LongAdder();
+    final LongAdder matchedDeletes = new LongAdder();
     final LongAdder deletes = new LongAdder();
     final LongAdder duplicates = new LongAdder();
     final LongAdder ignored = new LongAdder();
@@ -28,9 +30,9 @@ final class Stats {
         double secs = (now - lastNanos) / 1e9;
         long dp = p - lastPosts;
         long den = en - lastEnglish;
-        log.info("{} posts/s, {} English | totals: {} posts, {} English ({}), {} deletes, {} duplicates, {} ignored, {} unparseable",
+        log.info("{} posts/s, {} English | totals: {} posts, {} English ({}), {} matched, {} deletes ({} of matched posts), {} duplicates, {} ignored, {} unparseable",
                 "%.1f".formatted(dp / secs), percent(den, dp),
-                p, en, percent(en, p), deletes.sum(), duplicates.sum(), ignored.sum(), unparseable.sum());
+                p, en, percent(en, p), matched.sum(), deletes.sum(), matchedDeletes.sum(), duplicates.sum(), ignored.sum(), unparseable.sum());
         lastPosts = p;
         lastEnglish = en;
         lastNanos = now;

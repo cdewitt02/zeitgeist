@@ -1,5 +1,6 @@
 package headlinepulse.pipeline;
 
+import java.io.IOException;
 import java.nio.file.Path;
 import java.time.Duration;
 import java.util.Properties;
@@ -16,6 +17,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import headlinepulse.common.KafkaSettings;
+import headlinepulse.common.NewsDomains;
 
 public final class Main {
     private static final Logger log = LoggerFactory.getLogger(Main.class);
@@ -25,7 +27,11 @@ public final class Main {
     private static final Duration STATS_INTERVAL = Duration.ofSeconds(10);
     private static final Duration SHUTDOWN_TIMEOUT = Duration.ofSeconds(30);
 
-    public static void main(String[] args) throws InterruptedException {
+    public static void main(String[] args) throws IOException, InterruptedException {
+        Path newsDomainsFile = Path.of(System.getenv().getOrDefault("NEWS_DOMAINS", "config/news-domains.yaml"));
+        NewsDomains newsDomains = NewsDomains.load(newsDomainsFile);
+        log.info("Loaded {} news domains from {}", newsDomains.size(), newsDomainsFile);
+
         var props = new Properties();
         props.put(StreamsConfig.APPLICATION_ID_CONFIG, APPLICATION_ID);
         props.put(StreamsConfig.BOOTSTRAP_SERVERS_CONFIG, KafkaSettings.bootstrapServers());
@@ -38,7 +44,7 @@ public final class Main {
                 Path.of(System.getProperty("user.home"), ".headline-pulse", "kafka-streams").toString()));
 
         var stats = new Stats();
-        var streams = new KafkaStreams(NormalizeTopology.build(stats), props);
+        var streams = new KafkaStreams(PipelineTopology.build(stats, new PostMatcher(newsDomains)), props);
         var stopped = new CountDownLatch(1);
         streams.setUncaughtExceptionHandler(e -> {
             log.error("Stream thread failed; shutting down", e);

@@ -14,6 +14,8 @@ public final class Topics {
     public static final String BSKY_CURSOR = "bsky.cursor";
     /** Parsed, deduplicated English {@link Post}s as JSON, keyed by post URI. Deletes are tombstones. */
     public static final String BSKY_POSTS = "bsky.posts";
+    /** {@link MatchedPost}s as JSON, keyed by post URI. Deletes of matched posts are tombstones. */
+    public static final String POSTS_MATCHED = "posts.matched";
 
     public record Spec(String name, int partitions, Map<String, String> configs) {}
 
@@ -28,6 +30,10 @@ public final class Topics {
                     TopicConfig.SEGMENT_MS_CONFIG, millis(Duration.ofHours(1)))),
             // A debugging aid: lets you inspect what the pipeline parsed.
             new Spec(BSKY_POSTS, 3, Map.of(
+                    TopicConfig.CLEANUP_POLICY_CONFIG, TopicConfig.CLEANUP_POLICY_DELETE,
+                    TopicConfig.RETENTION_MS_CONFIG, millis(Duration.ofDays(7)),
+                    TopicConfig.COMPRESSION_TYPE_CONFIG, "zstd")),
+            new Spec(POSTS_MATCHED, 3, Map.of(
                     TopicConfig.CLEANUP_POLICY_CONFIG, TopicConfig.CLEANUP_POLICY_DELETE,
                     TopicConfig.RETENTION_MS_CONFIG, millis(Duration.ofDays(7)),
                     TopicConfig.COMPRESSION_TYPE_CONFIG, "zstd")));

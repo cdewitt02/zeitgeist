@@ -1,0 +1,27 @@
+# Texas news outlets. A post linking an article on any of these domains is a URL match.
+# Write domains in canonical form: lowercase, no www./m./amp. prefix. Subdomains are covered.
+outlets:
+  - name: The Texas Tribune
+    domains: [texastribune.org]
+  - name: Houston Chronicle
+    domains: [houstonchronicle.com, chron.com]
+  - name: Houston Public Media
+    domains: [houstonpublicmedia.org]
+  - name: The Dallas Morning News
+    domains: [dallasnews.com]
+  - name: KERA News
+    domains: [keranews.org]
+  - name: San Antonio Express-News
+    domains: [expressnews.com, mysanantonio.com]
+  - name: Texas Public Radio
+    domains: [tpr.org]
+  - name: Austin American-Statesman
+    domains: [statesman.com]
+  - name: KUT
+    domains: [kut.org]
+  - name: Texas Standard
+    domains: [texasstandard.org]
+  - name: El Paso Matters
+    domains: [elpasomatters.org]
+  - name: The Texas Observer
+    domains: [texasobserver.org]

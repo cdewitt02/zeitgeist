@@ -36,18 +36,21 @@ Every 10 seconds it logs the event rate, the queue depth, and how far behind liv
 ## Run the pipeline
 
 ```bash
-./gradlew :tools:createTopics        # adds bsky.posts if it's missing
+./gradlew :tools:createTopics        # adds bsky.posts and posts.matched if they're missing
 ./gradlew :pipeline:installDist
 pipeline/build/install/pipeline/bin/pipeline
 ```
 
-The pipeline is a Kafka Streams app that reads `bsky.raw`, parses each event, keeps posts with a declared English language (`en`, `en-US`, ...), drops repeats seen within 10 minutes (the poller's restart overlap), and writes them to `bsky.posts` as JSON keyed by post URI. A delete becomes a tombstone for its URI. Events that can't be parsed are counted and logged, never fatal. It runs exactly-once, so the dedupe store and the output can't disagree after a crash.
+The pipeline is a Kafka Streams app that reads `bsky.raw`, parses each event, keeps posts with a declared English language (`en`, `en-US`, ...), drops repeats seen within 10 minutes (the poller's restart overlap), and writes them to `bsky.posts` as JSON keyed by post URI. A delete becomes a tombstone for its URI.
 
-Every 10 seconds it logs the post rate, the share kept as English, and totals for deletes, duplicates, and unparseable events. On its first run it starts from the oldest event in `bsky.raw`. To reprocess from the start, stop it and run `kafka-streams-application-reset --application-id headline-pulse-pipeline --input-topics bsky.raw`.
+Posts that link an article on a Texas outlet listed in `config/news-domains.yaml` also go to `posts.matched`, with each article's canonical URL: `https`, lowercase host without `www.`/`m.`/`amp.`, no AMP path, trailing slash, query, or fragment. A delete of a matched post becomes a tombstone there too. Deletes of posts that never matched are left out, since they're nearly all of them. Events that can't be parsed are counted and logged, never fatal. It runs exactly-once, so the dedupe store and the output can't disagree after a crash.
+
+Every 10 seconds it logs the post rate, the share kept as English, and totals for matches, deletes, duplicates, and unparseable events. On its first run it starts from the oldest event in `bsky.raw`. To reprocess from the start, stop it and run `kafka-streams-application-reset --application-id headline-pulse-pipeline --input-topics bsky.raw`.
 
 | Variable | Default |
 |---|---|
 | `KAFKA_BOOTSTRAP_SERVERS` | `localhost:9092` |
+| `NEWS_DOMAINS` | `config/news-domains.yaml` |
 | `PIPELINE_STATE_DIR` | `~/.headline-pulse/kafka-streams` |
 
 Kafka UI is on port 8081 rather than 8080 because Open WebUI uses 8080 on this machine.

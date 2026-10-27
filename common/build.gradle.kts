@@ -7,4 +7,5 @@ dependencies {
     implementation(libs.kafka.clients)
     implementation(libs.jackson.databind)
     implementation(libs.jackson.jsr310)
+    implementation(libs.jackson.yaml)
 }
