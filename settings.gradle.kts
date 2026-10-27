@@ -5,4 +5,4 @@ plugins {
 
 rootProject.name = "headline-pulse"
 
-include("common", "poller", "tools")
+include("common", "poller", "pipeline", "tools")

@@ -12,6 +12,8 @@ public final class Topics {
     public static final String BSKY_RAW = "bsky.raw";
     /** The poller's last committed Jetstream {@code time_us}, keyed by {@code poller}. */
     public static final String BSKY_CURSOR = "bsky.cursor";
+    /** Parsed, deduplicated English {@link Post}s as JSON, keyed by post URI. Deletes are tombstones. */
+    public static final String BSKY_POSTS = "bsky.posts";
 
     public record Spec(String name, int partitions, Map<String, String> configs) {}
 
@@ -23,7 +25,12 @@ public final class Topics {
             new Spec(BSKY_CURSOR, 1, Map.of(
                     TopicConfig.CLEANUP_POLICY_CONFIG, TopicConfig.CLEANUP_POLICY_COMPACT,
                     // Compaction skips the active segment, so roll it often.
-                    TopicConfig.SEGMENT_MS_CONFIG, millis(Duration.ofHours(1)))));
+                    TopicConfig.SEGMENT_MS_CONFIG, millis(Duration.ofHours(1)))),
+            // A debugging aid: lets you inspect what the pipeline parsed.
+            new Spec(BSKY_POSTS, 3, Map.of(
+                    TopicConfig.CLEANUP_POLICY_CONFIG, TopicConfig.CLEANUP_POLICY_DELETE,
+                    TopicConfig.RETENTION_MS_CONFIG, millis(Duration.ofDays(7)),
+                    TopicConfig.COMPRESSION_TYPE_CONFIG, "zstd")));
 
     private static String millis(Duration d) {
         return Long.toString(d.toMillis());

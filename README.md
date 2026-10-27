@@ -33,4 +33,21 @@ Every 10 seconds it logs the event rate, the queue depth, and how far behind liv
 | `KAFKA_BOOTSTRAP_SERVERS` | `localhost:9092` |
 | `JETSTREAM_URL` | `wss://jetstream2.us-east.bsky.network/subscribe?wantedCollections=app.bsky.feed.post` |
 
+## Run the pipeline
+
+```bash
+./gradlew :tools:createTopics        # adds bsky.posts if it's missing
+./gradlew :pipeline:installDist
+pipeline/build/install/pipeline/bin/pipeline
+```
+
+The pipeline is a Kafka Streams app that reads `bsky.raw`, parses each event, keeps posts with a declared English language (`en`, `en-US`, ...), drops repeats seen within 10 minutes (the poller's restart overlap), and writes them to `bsky.posts` as JSON keyed by post URI. A delete becomes a tombstone for its URI. Events that can't be parsed are counted and logged, never fatal. It runs exactly-once, so the dedupe store and the output can't disagree after a crash.
+
+Every 10 seconds it logs the post rate, the share kept as English, and totals for deletes, duplicates, and unparseable events. On its first run it starts from the oldest event in `bsky.raw`. To reprocess from the start, stop it and run `kafka-streams-application-reset --application-id headline-pulse-pipeline --input-topics bsky.raw`.
+
+| Variable | Default |
+|---|---|
+| `KAFKA_BOOTSTRAP_SERVERS` | `localhost:9092` |
+| `PIPELINE_STATE_DIR` | `~/.headline-pulse/kafka-streams` |
+
 Kafka UI is on port 8081 rather than 8080 because Open WebUI uses 8080 on this machine.
