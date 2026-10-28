@@ -24,6 +24,7 @@ import headlinepulse.common.JsonSerde;
 import headlinepulse.common.MatchedPost;
 import headlinepulse.common.NewsDomains;
 import headlinepulse.common.Post;
+import headlinepulse.common.TopicMatcher;
 import headlinepulse.common.Topics;
 
 // All fixtures are synthetic.
@@ -37,9 +38,19 @@ class PipelineTopologyTest {
     private TestOutputTopic<String, Post> posts;
     private TestOutputTopic<String, MatchedPost> matched;
 
+    private static final TopicMatcher TOPICS = TopicMatcher.parse("""
+            topics:
+              - { id: race, hashtags: [synthrace], phrases: [{ text: "synthetic race" }] }
+              - { id: race-candidate, parent: race, phrases: [{ text: "zorblax" }] }
+            """);
+
     @BeforeEach
     void setUp() {
-        var matcher = new PostMatcher(NewsDomains.of(Map.of("example-news.com", "Example News")));
+        start(0);
+    }
+
+    private void start(int samplePercent) {
+        var matcher = new PostMatcher(NewsDomains.of(Map.of("example-news.com", "Example News")), TOPICS, samplePercent);
         driver = new TopologyTestDriver(PipelineTopology.build(stats, matcher));
         raw = driver.createInputTopic(Topics.BSKY_RAW, new StringSerializer(), new StringSerializer());
         posts = driver.createOutputTopic(Topics.BSKY_POSTS, new StringDeserializer(),
@@ -63,6 +74,14 @@ class PipelineTopologyTest {
                 "collection":"app.bsky.feed.post","rkey":"%s",\
                 "record":{"text":"Synthetic post %s","langs":%s},"cid":"c1"}}"""
                 .formatted(DID, timeUs, rkey, rkey, langs);
+    }
+
+    private static String createWithText(String rkey, long timeUs, String text) {
+        return """
+                {"did":"%s","time_us":%d,"kind":"commit","commit":{"rev":"r1","operation":"create",\
+                "collection":"app.bsky.feed.post","rkey":"%s",\
+                "record":{"text":"%s","langs":["en"]},"cid":"c1"}}"""
+                .formatted(DID, timeUs, rkey, text);
     }
 
     /** An English post whose text links {@code facetUrl} and whose link card is {@code cardUrl}. */
@@ -174,6 +193,8 @@ class PipelineTopologyTest {
         assertEquals(List.of("https://example-news.com/politics/story-one", "https://politics.example-news.com/story-two"),
                 out.value().urls());
         assertEquals("Synthetic link post", out.value().post().text());
+        assertEquals(List.of(), out.value().topics());
+        assertFalse(out.value().sample());
         assertEquals("Synthetic headline", out.value().post().card().title());
         assertEquals(Instant.ofEpochMilli(TIME_US / 1000), out.getRecordTime());
         assertTrue(matched.isEmpty());
@@ -239,7 +260,33 @@ class PipelineTopologyTest {
 
     @Test
     void needsNoRepartitionTopic() {
-        String description = PipelineTopology.build(new Stats(), new PostMatcher(NewsDomains.of(Map.of()))).describe().toString();
+        String description = PipelineTopology.build(new Stats(), new PostMatcher(NewsDomains.of(Map.of()), TOPICS, 10)).describe().toString();
         assertFalse(description.contains("repartition"), description);
+    }
+
+    @Test
+    void topicMatchesIncludeTheParent() {
+        send(createWithText("3kaaa", TIME_US, "Zorblax gave a speech"), TIME_US);
+
+        MatchedPost out = matched.readValue();
+        assertEquals(List.of("race", "race-candidate"), out.topics());
+        assertEquals(List.of(), out.urls());
+        assertEquals(1, stats.topicMatched.sum());
+        assertEquals(0, stats.urlMatched.sum());
+    }
+
+    @Test
+    void sampledPostsAreWrittenEvenWithoutAMatch() {
+        driver.close();
+        start(100);
+        send(createWithText("3kaaa", TIME_US, "Nothing to see here"), TIME_US);
+        send(delete("3kaaa", TIME_US + 1_000_000), TIME_US + 1_000_000);
+
+        var out = matched.readKeyValuesToList();
+        assertEquals(2, out.size());
+        assertTrue(out.get(0).value.sample());
+        assertEquals(List.of(), out.get(0).value.topics());
+        assertNull(out.get(1).value);
+        assertEquals(1, stats.sampled.sum());
     }
 }

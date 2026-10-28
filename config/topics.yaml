@@ -1,0 +1,203 @@
+# Races and issues to match posts against. See TopicMatcher for the rules.
+#
+# Each phrase matches case-insensitively, as whole words, in the post text or link card. A plural
+# s or es is allowed, so "school voucher" matches "school vouchers"; don't list both.
+#   requireAny: the phrase counts only if one of these words also appears in the post
+#   exclude:    longer phrases that cancel the match when they contain it ("abbott elementary")
+# A match on a topic also counts for its parent.
+#
+# The name problem: full names always match; distinctive surnames match alone; every other surname
+# needs context. Apply the same rules to both candidates in every race.
+
+# Context words reused by many entries
+context: &tx [texas, tx, txlege, austin, legislature, campaign, election, vote, voting, ballot, poll, debate,
+  governor, gov, senate, senator, gop, republican, republicans, democrat, democrats]
+
+topics:
+  # ---------- U.S. Senate ----------
+  - id: tx-senate
+    label: U.S. Senate race
+    hashtags: [txsen]
+    phrases:
+      - { text: "texas senate race" }
+      - { text: "senate race", requireAny: [texas, tx] }
+
+  - id: tx-senate-paxton
+    label: Ken Paxton
+    parent: tx-senate
+    phrases:
+      - { text: "ken paxton" }
+      - { text: "paxton" }
+
+  - id: tx-senate-talarico
+    label: James Talarico
+    parent: tx-senate
+    phrases:
+      - { text: "james talarico" }
+      - { text: "talarico" }
+
+  # ---------- Governor ----------
+  - id: tx-gov
+    label: Governor's race
+    hashtags: [txgov]
+    phrases:
+      - { text: "texas governor" }
+      - { text: "governor's race", requireAny: [texas, tx] }
+
+  - id: tx-gov-abbott
+    label: Greg Abbott
+    parent: tx-gov
+    phrases:
+      - { text: "greg abbott" }
+      - { text: "gov. abbott" }
+      - { text: "governor abbott" }
+      - { text: "abbott", requireAny: *tx, exclude: ["abbott elementary", "abbott labs", "abbott laboratories"] }
+
+  - id: tx-gov-hinojosa
+    label: Gina Hinojosa
+    parent: tx-gov
+    phrases:
+      - { text: "gina hinojosa" }
+      - { text: "hinojosa", requireAny: *tx }
+
+  # ---------- Lieutenant Governor ----------
+  - id: tx-ltgov
+    label: Lieutenant governor's race
+    phrases:
+      - { text: "lieutenant governor", requireAny: [texas, tx] }
+      - { text: "lt. governor", requireAny: [texas, tx] }
+      - { text: "lt. gov", requireAny: [texas, tx] }
+
+  - id: tx-ltgov-patrick
+    label: Dan Patrick
+    parent: tx-ltgov
+    phrases:
+      - { text: "dan patrick" }
+
+  - id: tx-ltgov-goodwin
+    label: Vikki Goodwin
+    parent: tx-ltgov
+    phrases:
+      - { text: "vikki goodwin" }
+
+  # ---------- Attorney General ----------
+  - id: tx-ag
+    label: Attorney general's race
+    phrases:
+      - { text: "texas attorney general" }
+      - { text: "attorney general", requireAny: [texas, tx] }
+
+  - id: tx-ag-middleton
+    label: Mayes Middleton
+    parent: tx-ag
+    phrases:
+      - { text: "mayes middleton" }
+
+  - id: tx-ag-johnson
+    label: Nathan Johnson
+    parent: tx-ag
+    phrases:
+      - { text: "nathan johnson", requireAny: *tx }
+
+  # ---------- Down-ballot statewide ----------
+  - id: tx-downballot
+    label: Comptroller, land, agriculture, railroad commission
+    phrases:
+      - { text: "don huffines" }
+      - { text: "sarah eckhardt" }
+      - { text: "dawn buckingham" }
+      - { text: "benjamin flores", requireAny: *tx }
+      - { text: "nathan sheets", requireAny: *tx }
+      - { text: "clayton tucker", requireAny: *tx }
+      - { text: "bo french", requireAny: *tx }
+      - { text: "jon rosenthal", requireAny: *tx }
+      - { text: "railroad commission" }
+      - { text: "texas comptroller" }
+      - { text: "land commissioner", requireAny: [texas, tx] }
+      - { text: "agriculture commissioner", requireAny: [texas, tx] }
+
+  # ---------- U.S. House ----------
+  - id: tx-house
+    label: U.S. House races and redistricting
+    phrases:
+      - { text: "texas redistricting" }
+      - { text: "redistricting", requireAny: [texas, tx] }
+      - { text: "congressional district", requireAny: [texas, tx] }
+
+  # ---------- Issues ----------
+  - id: issue-property-tax
+    label: Property taxes
+    phrases: [{ text: "property tax", requireAny: [texas, tx] }]
+
+  - id: issue-border
+    label: Border and immigration
+    phrases:
+      - { text: "operation lone star" }
+      - { text: "border", requireAny: [texas, tx, abbott] }
+      - { text: "immigration", requireAny: [texas, tx] }
+
+  - id: issue-schools
+    label: School vouchers and public education
+    phrases:
+      - { text: "school voucher" }
+      - { text: "education savings account" }
+      - { text: "public schools", requireAny: [texas, tx] }
+
+  - id: issue-grid
+    label: Power grid and ERCOT
+    phrases: [{ text: "ercot" }, { text: "texas grid" }, { text: "power grid", requireAny: [texas, tx] }]
+
+  - id: issue-water
+    label: Water
+    phrases: [{ text: "water", requireAny: [texas, tx], exclude: ["water bottle"] }]
+
+  - id: issue-abortion
+    label: Abortion
+    phrases: [{ text: "abortion", requireAny: [texas, tx] }]
+
+  - id: issue-voting
+    label: Voting access and election administration
+    hashtags: [txvotes]
+    phrases:
+      - { text: "early voting", requireAny: [texas, tx] }
+      - { text: "polling place", requireAny: [texas, tx] }
+      - { text: "mail ballot", requireAny: [texas, tx] }
+      - { text: "voter id", requireAny: [texas, tx] }
+      - { text: "texas secretary of state" }
+
+  - id: issue-prices
+    label: Inflation and higher prices
+    phrases:
+      - { text: "inflation", requireAny: [texas, tx] }
+      - { text: "cost of living", requireAny: [texas, tx] }
+      - { text: "affordability", requireAny: [texas, tx] }
+      - { text: "higher prices", requireAny: [texas, tx] }
+      - { text: "rising prices", requireAny: [texas, tx] }
+      - { text: "grocery prices", requireAny: [texas, tx] }
+      - { text: "gas prices", requireAny: [texas, tx] }
+      - { text: "housing costs", requireAny: [texas, tx] }
+
+  - id: issue-corruption
+    label: Political corruption
+    phrases:
+      - { text: "corruption", requireAny: [texas, tx] }
+      - { text: "corrupt", requireAny: [texas, tx] }
+      - { text: "bribery", requireAny: [texas, tx] }
+      - { text: "bribe", requireAny: [texas, tx] }
+      - { text: "kickback", requireAny: [texas, tx] }
+      - { text: "pay to play", requireAny: [texas, tx] }
+      - { text: "pay-to-play", requireAny: [texas, tx] }
+      - { text: "impeachment", requireAny: [texas, tx] }
+
+  - id: issue-health
+    label: Health care
+    phrases:
+      - { text: "health care", requireAny: [texas, tx] }
+      - { text: "healthcare", requireAny: [texas, tx] }
+      - { text: "health-care", requireAny: [texas, tx] }
+      - { text: "health insurance", requireAny: [texas, tx] }
+      - { text: "medicaid", requireAny: [texas, tx] }
+      - { text: "affordable care act", requireAny: [texas, tx] }
+      - { text: "obamacare", requireAny: [texas, tx] }
+      - { text: "uninsured", requireAny: [texas, tx] }
+      - { text: "rural hospital", requireAny: [texas, tx] }

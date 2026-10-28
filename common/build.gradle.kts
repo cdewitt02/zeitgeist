@@ -8,4 +8,6 @@ dependencies {
     implementation(libs.jackson.databind)
     implementation(libs.jackson.jsr310)
     implementation(libs.jackson.yaml)
+    // Parses topics.yaml, which uses YAML aliases that Jackson's YAML reader can't expand.
+    implementation(libs.snakeyaml)
 }

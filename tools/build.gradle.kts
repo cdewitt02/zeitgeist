@@ -22,3 +22,12 @@ tasks.register<JavaExec>("checkGaps") {
     classpath = sourceSets.main.get().runtimeClasspath
     mainClass = "headlinepulse.tools.CheckGaps"
 }
+
+tasks.register<JavaExec>("reviewTopic") {
+    group = "verification"
+    description = "Prints a sample of a topic's matches in recent bsky.posts: --args=\"<topic|all> [count] [scan]\""
+    classpath = sourceSets.main.get().runtimeClasspath
+    mainClass = "headlinepulse.tools.ReviewTopic"
+    // So config/topics.yaml resolves from the repo root.
+    workingDir = rootDir
+}

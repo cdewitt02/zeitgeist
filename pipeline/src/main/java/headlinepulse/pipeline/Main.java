@@ -18,6 +18,7 @@ import org.slf4j.LoggerFactory;
 
 import headlinepulse.common.KafkaSettings;
 import headlinepulse.common.NewsDomains;
+import headlinepulse.common.TopicMatcher;
 
 public final class Main {
     private static final Logger log = LoggerFactory.getLogger(Main.class);
@@ -31,6 +32,9 @@ public final class Main {
         Path newsDomainsFile = Path.of(System.getenv().getOrDefault("NEWS_DOMAINS", "config/news-domains.yaml"));
         NewsDomains newsDomains = NewsDomains.load(newsDomainsFile);
         log.info("Loaded {} news domains from {}", newsDomains.size(), newsDomainsFile);
+        Path topicsFile = Path.of(System.getenv().getOrDefault("TOPICS", "config/topics.yaml"));
+        TopicMatcher topics = TopicMatcher.load(topicsFile);
+        log.info("Loaded {} topics from {}", topics.topics().size(), topicsFile);
 
         var props = new Properties();
         props.put(StreamsConfig.APPLICATION_ID_CONFIG, APPLICATION_ID);
@@ -44,7 +48,7 @@ public final class Main {
                 Path.of(System.getProperty("user.home"), ".headline-pulse", "kafka-streams").toString()));
 
         var stats = new Stats();
-        var streams = new KafkaStreams(PipelineTopology.build(stats, new PostMatcher(newsDomains)), props);
+        var streams = new KafkaStreams(PipelineTopology.build(stats, new PostMatcher(newsDomains, topics, PostMatcher.SAMPLE_PERCENT)), props);
         var stopped = new CountDownLatch(1);
         streams.setUncaughtExceptionHandler(e -> {
             log.error("Stream thread failed; shutting down", e);

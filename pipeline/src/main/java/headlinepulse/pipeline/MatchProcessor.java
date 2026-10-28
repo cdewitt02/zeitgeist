@@ -14,7 +14,7 @@ import headlinepulse.common.Post;
 
 /**
  * Posts and tombstones from {@link Normalizer} in, matched posts out. A tombstone passes only if its
- * post matched within {@link #REMEMBER}: nearly every delete is of a post that never matched, and
+ * post was written out within {@link #REMEMBER}: nearly every delete is of a post that never matched, and
  * passing those on would bury the matches.
  *
  * <p>Like {@link Normalizer}, it needs no repartition: input is keyed by URI, and every event for a
@@ -52,7 +52,7 @@ final class MatchProcessor implements Processor<String, Post, String, MatchedPos
         }
         Optional<MatchedPost> matched = matcher.match(record.value());
         if (matched.isPresent()) {
-            stats.matched.increment();
+            stats.count(matched.get());
             matchedUris.put(record.key(), record.timestamp(), record.timestamp());
             context.forward(record.withValue(matched.get()));
         }

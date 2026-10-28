@@ -43,14 +43,32 @@ pipeline/build/install/pipeline/bin/pipeline
 
 The pipeline is a Kafka Streams app that reads `bsky.raw`, parses each event, keeps posts with a declared English language (`en`, `en-US`, ...), drops repeats seen within 10 minutes (the poller's restart overlap), and writes them to `bsky.posts` as JSON keyed by post URI. A delete becomes a tombstone for its URI.
 
-Posts that link an article on a Texas outlet listed in `config/news-domains.yaml` also go to `posts.matched`, with each article's canonical URL: `https`, lowercase host without `www.`/`m.`/`amp.`, no AMP path, trailing slash, query, or fragment. A delete of a matched post becomes a tombstone there too. Deletes of posts that never matched are left out, since they're nearly all of them. Events that can't be parsed are counted and logged, never fatal. It runs exactly-once, so the dedupe store and the output can't disagree after a crash.
+Posts worth scoring also go to `posts.matched`, with the reasons they matched:
 
-Every 10 seconds it logs the post rate, the share kept as English, and totals for matches, deletes, duplicates, and unparseable events. On its first run it starts from the oldest event in `bsky.raw`. To reprocess from the start, stop it and run `kafka-streams-application-reset --application-id headline-pulse-pipeline --input-topics bsky.raw`.
+- **`urls`:** articles they link on a Texas outlet in `config/news-domains.yaml`, canonicalized: `https`, lowercase host without `www.`/`m.`/`amp.`, no AMP path, trailing slash, query, or fragment.
+- **`topics`:** races and issues from `config/topics.yaml` whose hashtags or phrases appear in the post text or link card, plus the parents of those topics.
+- **`sample`:** 10% of all English posts, picked by a hash of the URI, as the baseline. Most of `posts.matched` is the sample.
+
+A delete of a post in `posts.matched` becomes a tombstone there too. Deletes of other posts are left out, since they're nearly all of them.
+
+## Review topic matches
+
+Before relying on a topic, read a sample of its matches and fix the phrases that pull in noise. This runs the current `config/topics.yaml` over recent `bsky.posts`, so you can edit the file and rerun without replaying the pipeline:
+
+```bash
+./gradlew :tools:reviewTopic                              # match counts for every topic
+./gradlew :tools:reviewTopic --args="tx-gov-abbott 50"    # 50 random matches, with what matched each
+```
+
+A third argument sets how many recent posts to scan (default 2,000,000). The sample uses a fixed seed, so a rerun shows mostly the same posts. Events that can't be parsed are counted and logged, never fatal. It runs exactly-once, so the dedupe store and the output can't disagree after a crash.
+
+Every 10 seconds it logs the post rate, the share kept as English, and totals for matches (by URL, topic, and sample), deletes, duplicates, and unparseable events. On its first run it starts from the oldest event in `bsky.raw`. To reprocess from the start, stop it and run `kafka-streams-application-reset --application-id headline-pulse-pipeline --input-topics bsky.raw`.
 
 | Variable | Default |
 |---|---|
 | `KAFKA_BOOTSTRAP_SERVERS` | `localhost:9092` |
 | `NEWS_DOMAINS` | `config/news-domains.yaml` |
+| `TOPICS` | `config/topics.yaml` |
 | `PIPELINE_STATE_DIR` | `~/.headline-pulse/kafka-streams` |
 
 Kafka UI is on port 8081 rather than 8080 because Open WebUI uses 8080 on this machine.
