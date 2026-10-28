@@ -16,6 +16,8 @@ public final class Topics {
     public static final String BSKY_POSTS = "bsky.posts";
     /** {@link MatchedPost}s as JSON, keyed by post URI. Deletes of matched posts are tombstones. */
     public static final String POSTS_MATCHED = "posts.matched";
+    /** {@link Headline}s from the outlets' RSS feeds as JSON, keyed by article URL. */
+    public static final String NEWS_HEADLINES = "news.headlines";
 
     public record Spec(String name, int partitions, Map<String, String> configs) {}
 
@@ -36,7 +38,11 @@ public final class Topics {
             new Spec(POSTS_MATCHED, 3, Map.of(
                     TopicConfig.CLEANUP_POLICY_CONFIG, TopicConfig.CLEANUP_POLICY_DELETE,
                     TopicConfig.RETENTION_MS_CONFIG, millis(Duration.ofDays(7)),
-                    TopicConfig.COMPRESSION_TYPE_CONFIG, "zstd")));
+                    TopicConfig.COMPRESSION_TYPE_CONFIG, "zstd")),
+            // Compacted, so it keeps every article ever seen and the headlines app can reload them.
+            new Spec(NEWS_HEADLINES, 1, Map.of(
+                    TopicConfig.CLEANUP_POLICY_CONFIG, TopicConfig.CLEANUP_POLICY_COMPACT,
+                    TopicConfig.SEGMENT_MS_CONFIG, millis(Duration.ofDays(1)))));
 
     private static String millis(Duration d) {
         return Long.toString(d.toMillis());

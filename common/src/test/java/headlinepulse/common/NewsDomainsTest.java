@@ -31,6 +31,18 @@ class NewsDomainsTest {
     }
 
     @Test
+    void articleUrlIsTheCanonicalUrlWithoutQuery() {
+        assertEquals(Optional.of("https://example.com/news/story"),
+                domains.articleUrl("http://www.example.com/news/story/?hash=abc&id=2#top"));
+        assertEquals(Optional.of("https://politics.example.com/story"),
+                domains.articleUrl("https://politics.example.com/amp/story"));
+        assertEquals(Optional.empty(), domains.articleUrl("https://www.example.com/"));
+        assertEquals(Optional.empty(), domains.articleUrl("https://example.com/?p=123"));
+        assertEquals(Optional.empty(), domains.articleUrl("https://other.example/story"));
+        assertEquals(Optional.empty(), domains.articleUrl("not a url"));
+    }
+
+    @Test
     void rejectsNonCanonicalOrDuplicateDomains() {
         assertThrows(IllegalArgumentException.class, () -> NewsDomains.of(Map.of("www.example.com", "X")));
         assertThrows(IllegalArgumentException.class, () -> NewsDomains.of(Map.of("Example.com", "X")));

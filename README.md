@@ -51,6 +51,23 @@ Posts worth scoring also go to `posts.matched`, with the reasons they matched:
 
 A delete of a post in `posts.matched` becomes a tombstone there too. Deletes of other posts are left out, since they're nearly all of them.
 
+## Run the headlines app
+
+```bash
+./gradlew :tools:createTopics        # adds news.headlines if it's missing
+./gradlew :headlines:installDist
+headlines/build/install/headlines/bin/headlines
+```
+
+Every 3 minutes it polls the RSS feeds in `config/feeds.yaml` and writes each article it hasn't seen to `news.headlines` (compacted), keyed by the same canonical article URL that posts linking it get in `posts.matched`, so the two join. It uses conditional GET, so an unchanged feed costs a 304. On startup it reloads the keys already in the topic, so a restart sends nothing twice.
+
+Each poll logs how many feeds were updated, unchanged, or failed, and how many headlines were new. A feed that fails is retried on the next poll, and its failures in a row are logged. Not every outlet in `news-domains.yaml` has a usable feed; `feeds.yaml` notes which and why. Links to those outlets still count as URL matches.
+
+| Variable | Default |
+|---|---|
+| `FEEDS` | `config/feeds.yaml` |
+| `NEWS_DOMAINS` | `config/news-domains.yaml` |
+
 ## Review topic matches
 
 Before relying on a topic, read a sample of its matches and fix the phrases that pull in noise. This runs the current `config/topics.yaml` over recent `bsky.posts`, so you can edit the file and rerun without replaying the pipeline:

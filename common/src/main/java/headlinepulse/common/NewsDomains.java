@@ -62,6 +62,26 @@ public final class NewsDomains {
         }
     }
 
+    /**
+     * The key for an article on an allowlisted outlet: its canonical URL without the query, or empty
+     * if {@code link} isn't one. Posts and headlines both use this, so they join on the same key.
+     *
+     * <p>The query goes because these outlets identify articles by path, so whatever query remains is
+     * share and newsletter tracking ({@code ?hash=...&rid=...&sharecount=...}) that would split one
+     * article's count across many keys. A link to a home page needs no key: it says nothing about a story.
+     */
+    public Optional<String> articleUrl(String link) {
+        return UrlCanonicalizer.canonicalize(link)
+                .map(NewsDomains::withoutQuery)
+                .filter(url -> url.indexOf('/', "https://".length()) >= 0)
+                .filter(url -> outlet(url).isPresent());
+    }
+
+    private static String withoutQuery(String canonicalUrl) {
+        int q = canonicalUrl.indexOf('?');
+        return q < 0 ? canonicalUrl : canonicalUrl.substring(0, q);
+    }
+
     /** The outlet whose domain covers this canonical URL's host, if any. */
     public Optional<String> outlet(String canonicalUrl) {
         String host = UrlCanonicalizer.hostOf(canonicalUrl);

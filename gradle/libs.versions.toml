@@ -5,6 +5,7 @@ slf4j = "2.0.20"
 logback = "1.6.5"
 junit = "6.1.3"
 snakeyaml = "2.5"
+rome = "2.1.0"
 
 [libraries]
 kafka-clients = { module = "org.apache.kafka:kafka-clients", version.ref = "kafka" }
@@ -13,6 +14,7 @@ kafka-streams-test-utils = { module = "org.apache.kafka:kafka-streams-test-utils
 jackson-core = { module = "com.fasterxml.jackson.core:jackson-core", version.ref = "jackson" }
 jackson-databind = { module = "com.fasterxml.jackson.core:jackson-databind", version.ref = "jackson" }
 jackson-yaml = { module = "com.fasterxml.jackson.dataformat:jackson-dataformat-yaml", version.ref = "jackson" }
+rome = { module = "com.rometools:rome", version.ref = "rome" }
 snakeyaml = { module = "org.yaml:snakeyaml", version.ref = "snakeyaml" }
 jackson-jsr310 = { module = "com.fasterxml.jackson.datatype:jackson-datatype-jsr310", version.ref = "jackson" }
 slf4j-api = { module = "org.slf4j:slf4j-api", version.ref = "slf4j" }
